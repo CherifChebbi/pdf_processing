@@ -77,13 +77,43 @@ known_funds = ["Alpha Crypto Fund", "Beta Blockchain Fund", "Gamma Digital Asset
 
 def validate_address(address):
     """
-    Vérifie si une adresse est valide en utilisant une API de géocodage.
+    Vérifie si une adresse est valide en utilisant l'API OpenStreetMap Nominatim.
     """
     try:
-        response = requests.get(f"https://nominatim.openstreetmap.org/search?q={address}&format=json")
-        return len(response.json()) > 0  # Retourne True si l'adresse est trouvée
+        # Vérifier si l'adresse est vide ou invalide
+        if not address or not isinstance(address, str):
+            logging.warning(f"Adresse vide ou invalide : {address}")
+            return False
+
+        # Envoyer une requête à l'API Nominatim
+        response = requests.get(
+            f"https://nominatim.openstreetmap.org/search?q={address}&format=json",
+            headers={"User-Agent": "YourAppName/1.0"}  # Ajouter un User-Agent pour éviter les erreurs 403
+        )
+
+        # Vérifier si la réponse est vide ou invalide
+        if not response.text.strip():
+            logging.error(f"Réponse vide de l'API Nominatim pour l'adresse : {address}")
+            return False
+
+        # Parser la réponse JSON
+        data = response.json()
+
+        # Vérifier si des résultats ont été trouvés
+        if isinstance(data, list) and len(data) > 0:
+            return True  # L'adresse est valide
+        else:
+            logging.debug(f"Aucun résultat trouvé pour l'adresse : {address}")
+            return False  # L'adresse n'est pas valide
+
+    except json.JSONDecodeError as e:
+        logging.error(f"Erreur de décodage JSON pour l'adresse {address} : {e}")
+        return False
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Erreur de requête pour l'adresse {address} : {e}")
+        return False
     except Exception as e:
-        logging.error(f"Erreur lors de la validation de l'adresse : {e}")
+        logging.error(f"Erreur lors de la validation de l'adresse {address} : {e}")
         return False
     
 def validate_legal_mention(mention_type, mention_value, known_regulators):
@@ -96,3 +126,16 @@ def validate_legal_mention(mention_type, mention_value, known_regulators):
 
 # Exemple de liste de régulateurs connus
 known_regulators = ["SEC", "AMF", "FCA", "FINMA"]
+
+def validate_url(url):
+    """
+    Valide une URL en vérifiant si elle est accessible.
+    """
+    try:
+        response = requests.get(url, timeout=5)
+        return response.status_code == 200
+    except Exception as e:
+        logging.error(f"Erreur lors de la validation de l'URL {url} : {e}")
+        return False
+    
+

@@ -4,7 +4,7 @@ import pytesseract  # Tesseract pour OCR
 from pdf2image import convert_from_path  # Convertir les pages PDF en images
 import pdfplumber  # Pour l'extraction de tableaux supplémentaires
 import logging
-
+import  re
 # Configuration des logs
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -127,7 +127,6 @@ def extract_images_from_pdf(pdf_path, output_dir):
     except Exception as e:
         logging.error(f"Erreur lors de l'extraction des images : {e}")
         return None
-
 
 # Fonction de test pour l'extraction des données
 def test_data_extraction(pdf_path):

@@ -23,7 +23,7 @@ import streamlit as st
 
 from ingestion import detect_pdf_type, extract_pdf_metadata, store_pdf_for_processing
 from extraction import extract_text_from_pdf, ocr_from_images, extract_tables_from_pdf, extract_images_from_pdf
-from processing import clean_text, extract_emails, extract_phone_numbers, extract_financial_kpis, extract_dates, extract_fund_names, extract_addresses, extract_legal_mentions, tokenize_text, lemmatize_text, structure_data
+from processing import clean_text, extract_emails, extract_phone_numbers, extract_financial_kpis, extract_dates, extract_fund_names, extract_addresses, extract_legal_mentions, tokenize_text, lemmatize_text, structure_data, extract_urls, extract_financial_amounts 
 from validation import validate_email, validate_phone_number, validate_kpi, validate_date, validate_fund_name, validate_address, validate_legal_mention
 from model import generate_answer_for_questions
 
@@ -72,7 +72,9 @@ def process_pdf_data(pdf_path, output_dir="output"):
         fund_names = extract_fund_names(cleaned_text)  # Extraction des noms de fonds
         addresses = extract_addresses(cleaned_text)    # Extraction des adresses
         legal_mentions = extract_legal_mentions(cleaned_text)  # Extraction des mentions légales
-
+        urls = extract_urls(cleaned_text)  # Extraction des URLs
+        financial_amounts = extract_financial_amounts(cleaned_text)  # Extraction des montants financ
+        
         # Générer des questions à partir du texte
         questions = generate_answer_for_questions(cleaned_text)
 
@@ -85,7 +87,7 @@ def process_pdf_data(pdf_path, output_dir="output"):
 
         # Étape 8 : Structurer les données extraites
         structured_data = structure_data(
-            emails, phone_numbers, kpis, dates, fund_names, addresses, legal_mentions, questions
+            emails, phone_numbers, kpis, dates, fund_names, addresses, legal_mentions, urls, financial_amounts, questions 
         )
 
         # Étape 9 : Valider les informations extraites
@@ -99,6 +101,9 @@ def process_pdf_data(pdf_path, output_dir="output"):
             key: value for key, value in structured_data["legal_mentions"].items()
             if validate_legal_mention(key, value, known_regulators)
         }
+        #cleaned_urls = [clean_url(url) for url in structured_data["urls"]]
+        #validate_urls = [url for url in cleaned_urls["urls"] if validate_url(url)]
+
 
         # Créer un dossier spécifique pour le PDF dans output
         pdf_name = os.path.basename(pdf_path).split(".")[0]  # Nom du PDF sans l'extension
@@ -137,6 +142,8 @@ def process_pdf_data(pdf_path, output_dir="output"):
             "valid_fund_names": valid_fund_names,
             "valid_addresses": valid_addresses,
             "valid_legal_mentions": valid_legal_mentions,
+            "validate_urls" : urls,
+            "validate_financial_amounts" : financial_amounts,
             "pdf_output_dir": pdf_output_dir,  # Renvoie le chemin du dossier de sortie du PDF
             "tables": tables,  # Renvoie les tableaux extraits
             "images": images   # Renvoie les chemins des images extraites
@@ -196,6 +203,12 @@ def main():
 
             st.subheader("Mentions légales validées")
             st.write(result["valid_legal_mentions"])
+
+            st.subheader("Urls validées")
+            st.write(result["validate_urls"])
+
+            st.subheader("financial_amounts")
+            st.write(result["validate_financial_amounts"])
 
             st.subheader("Fichiers générés")
             st.write(f"Les résultats et extractions ont été enregistrés dans : {result['pdf_output_dir']}")

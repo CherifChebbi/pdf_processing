@@ -35,7 +35,7 @@ def clean_text(text):
     """
     try:
         # Suppression des caractères non alphanumériques sauf pour les espaces, @, ., et ,
-        cleaned_text = re.sub(r"[^a-zA-Z0-9\s@.,]", "", text)
+        cleaned_text = re.sub(r"[^a-zA-Z0-9\s@.,:/\-]", "", text)
         # Conversion en minuscules et suppression des espaces multiples
         cleaned_text = re.sub(r"\s+", " ", cleaned_text).lower()
         # Suppression des lignes vides
@@ -44,6 +44,30 @@ def clean_text(text):
     except Exception as e:
         logging.error(f"Erreur lors du nettoyage du texte : {e}")
         return None
+
+# Tokenisation et Structuration du Texte
+def tokenize_text(text):
+    """
+    Tokenise le texte en mots et en phrases.
+    """
+    try:
+        words = word_tokenize(text)
+        sentences = sent_tokenize(text)
+        return words, sentences
+    except Exception as e:
+        logging.error(f"Erreur lors de la tokenisation du texte : {e}")
+        return [], []
+
+def lemmatize_text(words):
+    """
+    Lemmatise les mots pour réduire les formes flexionnelles.
+    """
+    try:
+        lemmatizer = WordNetLemmatizer()
+        return [lemmatizer.lemmatize(word) for word in words]
+    except Exception as e:
+        logging.error(f"Erreur lors de la lemmatisation du texte : {e}")
+
 
 # ------------------------------------------------
 # Extraction des Emails et Numéros de Téléphone
@@ -101,59 +125,6 @@ def extract_dates(text):
         logging.error(f"Erreur lors de l'extraction des dates : {e}")
         return []
 
-# ------------------------------------------------
-# Tokenisation et Structuration du Texte
-def tokenize_text(text):
-    """
-    Tokenise le texte en mots et en phrases.
-    """
-    try:
-        words = word_tokenize(text)
-        sentences = sent_tokenize(text)
-        return words, sentences
-    except Exception as e:
-        logging.error(f"Erreur lors de la tokenisation du texte : {e}")
-        return [], []
-
-def lemmatize_text(words):
-    """
-    Lemmatise les mots pour réduire les formes flexionnelles.
-    """
-    try:
-        lemmatizer = WordNetLemmatizer()
-        return [lemmatizer.lemmatize(word) for word in words]
-    except Exception as e:
-        logging.error(f"Erreur lors de la lemmatisation du texte : {e}")
-        return []
-
-from datetime import datetime
-
-def structure_data(emails, phones, kpis, dates, fund_names=None, addresses=None, legal_mentions=None, questions=None):
-    """
-    Structure les données extraites sous forme d'un dictionnaire.
-    """
-    return {
-        "emails": emails,
-        "phone_numbers": phones,
-        "financial_kpis": kpis,
-        "dates": dates,
-        "fund_names": fund_names if fund_names else [],  # Ajout des noms de fonds
-        "addresses": addresses if addresses else [],    # Ajout des adresses
-        "legal_mentions": legal_mentions if legal_mentions else {},  # Ajout des mentions légales
-        "questions": questions if questions else [],  # Ajout des questions
-        "metadata": {
-            "extraction_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "total_emails": len(emails),
-            "total_phones": len(phones),
-            "total_kpis": len(kpis),
-            "total_dates": len(dates),
-            "total_fund_names": len(fund_names) if fund_names else 0,
-            "total_addresses": len(addresses) if addresses else 0,
-            "total_legal_mentions": len(legal_mentions) if legal_mentions else 0,
-            "total_questions": len(questions) if questions else 0,  # Ajout du total de questions
-        }
-    }
-
 def extract_fund_names(text):
     """
     Extrait les noms des fonds mentionnés dans le texte.
@@ -193,3 +164,58 @@ def extract_legal_mentions(text):
     except Exception as e:
         logging.error(f"Erreur lors de l'extraction des mentions légales : {e}")
         return {}
+
+def extract_urls(text):
+    """
+    Extrait les URLs du texte à l'aide d'une expression régulière améliorée.
+    """
+    try:
+        # Expression régulière pour capturer les URLs, y compris les DOI et les chemins complexes
+        url_pattern = r"(https?://(?:www\.)?[\w\-\.]+\.[a-zA-Z]{2,}(?:/\S*)?|doi:\s*https?://doi\.org/\S+|https?://[\w\-\.]+\.\w{2,}(?:/\S*)?)"
+        return re.findall(url_pattern, text)
+    except Exception as e:
+        logging.error(f"Erreur lors de l'extraction des URLs : {e}")
+        return []
+
+def extract_financial_amounts(text):
+    """
+    Extrait les montants financiers avec leurs devises.
+    """
+    try:
+        amount_pattern = r"(\$|€|£)?\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?"
+        return re.findall(amount_pattern, text)
+    except Exception as e:
+        logging.error(f"Erreur lors de l'extraction des montants financiers : {e}")
+        return []
+    
+# ------------------------------------------------
+def structure_data(emails, phones, kpis, dates, fund_names=None, addresses=None, legal_mentions=None, urls=None, financial_amounts=None, questions=None):
+    """
+    Structure les données extraites sous forme d'un dictionnaire.
+    """
+    return {
+        "emails": emails,
+        "phone_numbers": phones,
+        "financial_kpis": kpis,
+        "dates": dates,
+        "fund_names": fund_names if fund_names else [],  # Ajout des noms de fonds
+        "addresses": addresses if addresses else [],    # Ajout des adresses
+        "legal_mentions": legal_mentions if legal_mentions else {},  # Ajout des mentions légales
+        "urls": urls if urls else [],
+        "financial_amounts": financial_amounts if financial_amounts else [],
+        "questions": questions if questions else [],  # Ajout des questions
+        "metadata": {
+            "extraction_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "total_emails": len(emails),
+            "total_phones": len(phones),
+            "total_kpis": len(kpis),
+            "total_dates": len(dates),
+            "total_fund_names": len(fund_names) if fund_names else 0,
+            "total_addresses": len(addresses) if addresses else 0,
+            "total_legal_mentions": len(legal_mentions) if legal_mentions else 0,
+            "total_urls": len(urls) if urls else 0,
+            "total_financial_amounts": len(financial_amounts) if financial_amounts else 0,  # Ajout du total des montants
+            "total_questions": len(questions) if questions else 0,  # Ajout du total de questions
+            
+        }
+    }
