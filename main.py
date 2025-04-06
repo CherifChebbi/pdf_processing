@@ -25,7 +25,7 @@ from ingestion import detect_pdf_type, extract_pdf_metadata, store_pdf_for_proce
 from extraction import extract_text_from_pdf, ocr_from_images, extract_tables_from_pdf, extract_images_from_pdf
 from processing import clean_text, extract_emails, extract_phone_numbers, extract_financial_kpis, extract_dates, extract_fund_names, extract_addresses, extract_legal_mentions, tokenize_text, lemmatize_text, structure_data, extract_urls, extract_financial_amounts 
 from validation import validate_email, validate_phone_number, validate_kpi, validate_date, validate_fund_name, validate_address, validate_legal_mention
-from model import generate_answer_for_questions
+from model import generate_answer
 
 # Configuration des logs
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -76,7 +76,7 @@ def process_pdf_data(pdf_path, output_dir="output"):
         financial_amounts = extract_financial_amounts(cleaned_text)  # Extraction des montants financ
         
         # Générer des questions à partir du texte
-        questions = generate_answer_for_questions(cleaned_text)
+        questions = generate_answer(cleaned_text)
 
         # Étape 6 : Tokeniser et lemmatiser le texte
         words, sentences = tokenize_text(cleaned_text)

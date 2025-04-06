@@ -10,7 +10,7 @@ import requests
 API_KEY = "96078828-c037-4655-90c0-e655e3bb71dc"
 BASE_URL = "https://api.sambanova.ai/v1"
 
-def generate_answer_for_questions(text, model="DeepSeek-R1-Distill-Llama-70B"):
+def generate_answer(text, model="DeepSeek-R1-Distill-Llama-70B"):
     """
     Génère des réponses spécifiques aux questions sur les fonds d'investissement,
     les montants d'investissement, les exigences légales, les risques financiers, et les rendements.

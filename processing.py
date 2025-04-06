@@ -26,9 +26,9 @@ import streamlit as st
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # ------------------------------------------------
-#                   Step 3
+#                   NETTOYAGE ET PRÉTRAITEMENT
 # ------------------------------------------------
-# Normalisation et Nettoyage des Données
+
 def clean_text(text):
     """
     Nettoie le texte extrait en conservant les caractères spéciaux nécessaires pour les emails.
@@ -45,7 +45,6 @@ def clean_text(text):
         logging.error(f"Erreur lors du nettoyage du texte : {e}")
         return None
 
-# Tokenisation et Structuration du Texte
 def tokenize_text(text):
     """
     Tokenise le texte en mots et en phrases.
@@ -70,7 +69,9 @@ def lemmatize_text(words):
 
 
 # ------------------------------------------------
-# Extraction des Emails et Numéros de Téléphone
+#                   EXTRACTIONS
+# ------------------------------------------------
+
 def extract_emails(text):
     """
     Extrait les emails du texte à l'aide d'une expression régulière.
@@ -95,8 +96,6 @@ def extract_phone_numbers(text):
         logging.error(f"Erreur lors de l'extraction des numéros de téléphone : {e}")
         return []
 
-# ------------------------------------------------
-# Extraction des KPIs Financiers
 def extract_financial_kpis(text):
     """
     Extrait les KPIs financiers du texte, comme les revenus, bénéfices, etc.
@@ -108,8 +107,6 @@ def extract_financial_kpis(text):
         logging.error(f"Erreur lors de l'extraction des KPIs financiers : {e}")
         return []
 
-# ------------------------------------------------
-# Extraction des Dates
 def extract_dates(text):
     """
     Extrait les dates au format standard (dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy, dd mois yyyy, etc.).
@@ -188,6 +185,8 @@ def extract_financial_amounts(text):
         logging.error(f"Erreur lors de l'extraction des montants financiers : {e}")
         return []
     
+# ------------------------------------------------
+#                   STRUCTURATION DES DONNÉES
 # ------------------------------------------------
 def structure_data(emails, phones, kpis, dates, fund_names=None, addresses=None, legal_mentions=None, urls=None, financial_amounts=None, questions=None):
     """
